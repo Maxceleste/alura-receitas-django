@@ -13,4 +13,5 @@ class Receitas(models.Model):
     categoria = models.CharField(max_length=100)
     date_receita = models.DateTimeField(default=datetime.now, blank = True)
     publicado = models.BooleanField(default = False)
+    foto_receita = models.ImageField(upload_to = 'fotos/%d/%m/%Y', blank=True)
     
