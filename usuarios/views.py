@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
-from django.contrib import auth
+from django.contrib import auth, messages
 from receitas.models import Receitas
 
 def cadastro(request):
@@ -11,25 +11,25 @@ def cadastro(request):
         senha2 = request.POST['password2']
 
         if not nome.strip():
-            print('O campo nome não pode ficar em branco')
+            messages.error(request, 'O campo nome não pode ficar em branco')
             return redirect('cadastro')
         
         if not email.strip():
-            print('O campo email não pode ficar em branco')
+            messages.error(request, 'O campo email não pode ficar em branco')
             return redirect('cadastro')
 
         if senha != senha2:
-            print('As senhas estão diferentes.')
+            messages.error(request, 'As senhas estão diferentes.')
             return redirect('cadastro')
 
         if User.objects.filter(email=email).exists():
-            print('Usuário já existe')
+            messages.error(request, 'Usuário já existe')
             return redirect('cadastro')
         
         user = User.objects.create_user(username = nome, email = email, password = senha)
         user.save()
 
-        print('Usuário cadastrado')
+        messages.success(request, 'Usuário cadastrado')
         return redirect('login')
     else:
         return render(request, 'usuarios/cadastro.html')
@@ -41,7 +41,7 @@ def login(request):
         senha = request.POST['senha']
 
         if email == '' or senha == '':
-            print('Prencha todos os campos.')
+            messages.error(request, 'Prencha todos os campos.')
             return redirect('login')
 
         if User.objects.filter(email=email).exists():
@@ -51,6 +51,12 @@ def login(request):
                 auth.login(request, user)
                 print('Login realizado com sucesso!')
                 return redirect('dashboard')
+            else:
+                messages.error(request, 'Informações inválidas')
+                return redirect('login')
+        else:
+            messages.error(request, 'E-mail não cadastrado')
+            return redirect('login')
 
     return render(request, 'usuarios/login.html')
 
