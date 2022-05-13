@@ -10,19 +10,23 @@ def cadastro(request):
         senha = request.POST['password']
         senha2 = request.POST['password2']
 
-        if not nome.strip():
+        if campo_vazio(nome):
             messages.error(request, 'O campo nome não pode ficar em branco')
             return redirect('cadastro')
         
-        if not email.strip():
+        if campo_vazio(email):
             messages.error(request, 'O campo email não pode ficar em branco')
             return redirect('cadastro')
 
-        if senha != senha2:
+        if senhas_diferentes(senha, senha2):
             messages.error(request, 'As senhas estão diferentes.')
             return redirect('cadastro')
 
-        if User.objects.filter(email=email).exists():
+        if email_ja_cadastrado(email):
+            messages.error(request, 'Usuário já existe')
+            return redirect('cadastro')
+
+        if usuario_ja_cadastrado(nome):
             messages.error(request, 'Usuário já existe')
             return redirect('cadastro')
         
@@ -40,16 +44,15 @@ def login(request):
         email = request.POST['email']
         senha = request.POST['senha']
 
-        if email == '' or senha == '':
+        if campo_vazio(email) or campo_vazio(senha):
             messages.error(request, 'Prencha todos os campos.')
             return redirect('login')
 
-        if User.objects.filter(email=email).exists():
+        if email_ja_cadastrado(email):
             nome = User.objects.filter(email=email).values_list('username', flat = True)[0]
             user = auth.authenticate(request, username = nome, password = senha)
             if user is not None:
                 auth.login(request, user)
-                print('Login realizado com sucesso!')
                 return redirect('dashboard')
             else:
                 messages.error(request, 'Informações inválidas')
@@ -105,3 +108,28 @@ def cria_receita(request):
     else:
         return render(request, 'usuarios/cria_receita.html')
 
+
+def campo_vazio(campo):
+    '''
+    Função que retorna True ou False se o campo como argumento estiver vazio.
+    '''
+    return not campo.strip()
+
+def senhas_diferentes(senha1, senha2):
+    '''
+    Função que retorna True ou False se as duas senhas são diferentes.
+    '''
+    return senha1 != senha2
+
+def email_ja_cadastrado(email):
+    '''
+    Função que retorna True ou False se o email já está cadastrado no banco.
+    '''
+    return User.objects.filter(email=email).exists()
+
+def usuario_ja_cadastrado(user):
+    '''
+    Função que retorna True ou Flase se o usuário já estiver cadastrado no banco
+    '''
+    return User.objects.filter(username=user).exists()
+    
